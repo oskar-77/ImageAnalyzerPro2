@@ -733,6 +733,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "scikit-image" },
     { name = "scipy" },
+    { name = "sqlalchemy" },
     { name = "werkzeug" },
 ]
 
@@ -750,6 +751,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "scikit-image", specifier = ">=0.25.2" },
     { name = "scipy", specifier = ">=1.16.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.41" },
     { name = "werkzeug", specifier = ">=3.1.3" },
 ]
 
