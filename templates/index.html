@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Image Analysis Dashboard - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4">
+                <i class="fas fa-image text-primary me-3"></i>
+                Image Analysis Dashboard
+            </h1>
+            <p class="lead text-muted">
+                Comprehensive image analysis with pixel exploration, statistics, conversions, and comparisons
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Single Image Analysis -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-microscope text-primary me-2"></i>
+                    Single Image Analysis
+                </h5>
+                <p class="card-text">
+                    Upload an image to explore pixel values, generate statistics, histograms, and apply various conversions.
+                </p>
+                
+                <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" class="mt-3">
+                    <div class="mb-3">
+                        <label for="imageFile" class="form-label">Choose Image File</label>
+                        <input type="file" class="form-control" id="imageFile" name="file" accept="image/*" required>
+                        <div class="form-text">
+                            Supported formats: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP (Max: 16MB)
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload & Analyze
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Comparison -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-balance-scale text-success me-2"></i>
+                    Image Comparison
+                </h5>
+                <p class="card-text">
+                    Compare two images using SSIM, PSNR, and other metrics. Generate difference maps and detailed reports.
+                </p>
+                
+                <form id="compareForm" class="mt-3">
+                    <div class="mb-3">
+                        <label for="imageFile1" class="form-label">First Image</label>
+                        <input type="file" class="form-control" id="imageFile1" name="file1" accept="image/*" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imageFile2" class="form-label">Second Image</label>
+                        <input type="file" class="form-control" id="imageFile2" name="file2" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-compare me-2"></i>Compare Images
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Overview -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Features Overview</h2>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-mouse-pointer fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Pixel Exploration</h5>
+                <p class="card-text">Click on any pixel to view RGB, HSV, LAB values and brightness information.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-bar fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Statistics</h5>
+                <p class="card-text">Comprehensive statistics including brightness, histograms, and texture analysis.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-exchange-alt fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Conversions</h5>
+                <p class="card-text">Convert between different formats: RGB, Grayscale, Binary, HSV, and more.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-download fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Reports</h5>
+                <p class="card-text">Generate and download detailed analysis reports in TXT or PNG format.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Results Modal -->
+<div class="modal fade" id="comparisonModal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="comparisonModalLabel">
+                    <i class="fas fa-balance-scale me-2"></i>Image Comparison Results
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="comparisonResults">
+                    <!-- Comparison results will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const compareForm = document.getElementById('compareForm');
+    const comparisonModal = new bootstrap.Modal(document.getElementById('comparisonModal'));
+    
+    compareForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(compareForm);
+        const file1 = formData.get('file1');
+        const file2 = formData.get('file2');
+        
+        if (!file1 || !file2) {
+            alert('Please select both images for comparison.');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = compareForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Comparing...';
+        submitBtn.disabled = true;
+        
+        // Submit comparison request
+        fetch('/api/compare', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                displayComparisonResults(data);
+                comparisonModal.show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during comparison.');
+        })
+        .finally(() => {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+    
+    function displayComparisonResults(data) {
+        const resultsDiv = document.getElementById('comparisonResults');
+        
+        let html = `
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Original Images</h6>
+                    <img src="/static/uploads/${data.image1}" class="img-fluid mb-2" alt="Image 1">
+                    <img src="/static/uploads/${data.image2}" class="img-fluid" alt="Image 2">
+                </div>
+                <div class="col-md-8">
+                    <h6>Similarity Metrics</h6>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">SSIM</h5>
+                                    <p class="card-text">
+                                        <strong>${(data.ssim.ssim * 100).toFixed(2)}%</strong><br>
+                                        <small class="text-muted">${data.ssim.interpretation}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">PSNR</h5>
+                                    <p class="card-text">
+                                        <strong>${data.psnr.psnr.toFixed(2)} dB</strong><br>
+                                        <small class="text-muted">${data.psnr.interpretation}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">MSE</h5>
+                                    <p class="card-text">
+                                        <strong>${data.mse.mse.toFixed(2)}</strong><br>
+                                        <small class="text-muted">${data.mse.interpretation}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Overall</h5>
+                                    <p class="card-text">
+                                        <strong>${data.overall_similarity.percentage.toFixed(1)}%</strong><br>
+                                        <small class="text-muted">${data.overall_similarity.interpretation}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if (data.difference_map) {
+            html += `
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6>Difference Map</h6>
+                        <img src="/static/uploads/${data.difference_map}" class="img-fluid" alt="Difference Map">
+                    </div>
+                </div>
+            `;
+        }
+        
+        resultsDiv.innerHTML = html;
+    }
+});
+</script>
+{% endblock %}

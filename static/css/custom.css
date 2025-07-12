@@ -1,0 +1,288 @@
+/* Custom CSS for Image Analysis Dashboard */
+/* Using Bootstrap dark theme variables and minimal custom overrides */
+
+:root {
+    --custom-primary: var(--bs-primary);
+    --custom-success: var(--bs-success);
+    --custom-info: var(--bs-info);
+    --custom-warning: var(--bs-warning);
+    --custom-danger: var(--bs-danger);
+}
+
+/* Image display enhancements */
+.image-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.image-clickable {
+    cursor: crosshair;
+    transition: opacity 0.2s ease;
+}
+
+.image-clickable:hover {
+    opacity: 0.9;
+}
+
+/* Pixel marker styling */
+.pixel-marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: var(--bs-danger);
+    border: 2px solid var(--bs-light);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Color swatch styling */
+.color-swatch {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Statistics cards */
+.stats-card {
+    transition: transform 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Loading spinner overlay */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(var(--bs-dark-rgb), 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Progress bars */
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+/* Histogram container */
+.histogram-container {
+    min-height: 400px;
+    width: 100%;
+}
+
+/* Comparison results */
+.comparison-metric {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    background-color: var(--bs-secondary-bg);
+    margin-bottom: 1rem;
+}
+
+.comparison-metric .metric-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--bs-primary);
+}
+
+.comparison-metric .metric-label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary-color);
+    margin-top: 0.25rem;
+}
+
+/* File upload styling */
+.file-upload-area {
+    border: 2px dashed var(--bs-border-color);
+    border-radius: 0.375rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: var(--bs-secondary-bg);
+}
+
+.file-upload-area:hover {
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+.file-upload-area.dragover {
+    border-color: var(--bs-success);
+    background-color: var(--bs-success-bg-subtle);
+}
+
+/* Tab content styling */
+.tab-content {
+    min-height: 400px;
+}
+
+/* Responsive image gallery */
+.converted-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.converted-image-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    overflow: hidden;
+    background-color: var(--bs-card-bg);
+}
+
+.converted-image-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.converted-image-card .card-body {
+    padding: 0.75rem;
+}
+
+/* Pixel value display */
+.pixel-value-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+}
+
+.pixel-value-item {
+    background-color: var(--bs-secondary-bg);
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    text-align: center;
+}
+
+.pixel-value-item .value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--bs-primary);
+}
+
+.pixel-value-item .label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary-color);
+    margin-top: 0.25rem;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-indicator.success {
+    background-color: var(--bs-success-bg-subtle);
+    color: var(--bs-success);
+}
+
+.status-indicator.error {
+    background-color: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger);
+}
+
+.status-indicator.processing {
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning);
+}
+
+/* Utility classes */
+.text-gradient {
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-info));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.shadow-hover {
+    transition: box-shadow 0.3s ease;
+}
+
+.shadow-hover:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pixel-value-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .converted-images {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-metric {
+        padding: 0.75rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break {
+        page-break-after: always;
+    }
+}
+
+/* Accessibility improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Focus indicators */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bs-secondary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bs-border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-secondary-color);
+}
