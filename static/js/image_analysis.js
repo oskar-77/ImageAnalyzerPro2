@@ -20,6 +20,81 @@ class ImageAnalysisDashboard {
         this.setupTooltips();
     }
     
+    async loadImageInfo() {
+        if (!this.currentImage) return;
+        
+        try {
+            const response = await fetch(`/api/image_info/${this.currentImage}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                document.getElementById('imageInfo').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            this.imageInfo = data;
+            this.displayImageInfo(data);
+        } catch (error) {
+            console.error('Error loading image info:', error);
+            document.getElementById('imageInfo').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Failed to load image information
+                </div>
+            `;
+        }
+    }
+    
+    displayImageInfo(data) {
+        const formatBytes = (bytes) => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
+        
+        document.getElementById('imageInfo').innerHTML = `
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="bg-body-secondary p-2 rounded text-center">
+                        <div class="fw-bold text-primary">${data.width}</div>
+                        <small class="text-muted">Width</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-body-secondary p-2 rounded text-center">
+                        <div class="fw-bold text-primary">${data.height}</div>
+                        <small class="text-muted">Height</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-body-secondary p-2 rounded text-center">
+                        <div class="fw-bold text-info">${data.channels}</div>
+                        <small class="text-muted">Channels</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-body-secondary p-2 rounded text-center">
+                        <div class="fw-bold text-success">${data.format}</div>
+                        <small class="text-muted">Format</small>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="bg-body-secondary p-2 rounded text-center">
+                        <div class="fw-bold text-warning">${formatBytes(data.file_size)}</div>
+                        <small class="text-muted">File Size</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
     setupEventListeners() {
         // Image click handler for pixel exploration
         document.addEventListener('click', (e) => {
@@ -817,6 +892,16 @@ class ImageAnalysisDashboard {
     
     setCurrentImage(filename) {
         this.currentImage = filename;
+        // Reset cached data
+        this.imageInfo = null;
+        this.statisticsData = null;
+        this.histogramData = null;
+        
+        // Load initial data
+        if (filename) {
+            this.loadImageInfo();
+            this.loadStatistics();
+        }
     }
 }
 

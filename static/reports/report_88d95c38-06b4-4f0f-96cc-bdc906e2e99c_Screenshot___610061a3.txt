@@ -1,0 +1,18 @@
+IMAGE ANALYSIS REPORT
+==================================================
+
+Generated: 2025-07-12 23:52:27
+Image: 88d95c38-06b4-4f0f-96cc-bdc906e2e99c_Screenshot__.jpg
+
+BASIC INFORMATION
+--------------------
+Dimensions: 887 x 1275 pixels
+Channels: 3
+File Size: 568,630 bytes
+
+STATISTICS
+--------------------
+Mean Brightness: 20.43
+Standard Deviation: 31.22
+Min Value: 0
+Max Value: 242

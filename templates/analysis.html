@@ -15,7 +15,8 @@
                 <div class="card-body">
                     <div class="image-container position-relative">
                         <img id="mainImage" src="{{ url_for('static', filename='uploads/' + filename) }}" 
-                             alt="Analysis Image" class="img-fluid rounded image-clickable">
+                             alt="Analysis Image" class="img-fluid rounded image-clickable"
+                             data-current-image="{{ filename }}">
                         <div id="clickOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none">
                             <div id="clickMarker" class="pixel-marker"></div>
                         </div>
@@ -173,8 +174,10 @@
                                             <h6 class="card-title">Converted Images</h6>
                                             <div id="convertedImages">
                                                 <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
                                                     Converted images will appear here
                                                 </div>
+                                            </div>
                                             </div>
                                         </div>
                                     </div>
