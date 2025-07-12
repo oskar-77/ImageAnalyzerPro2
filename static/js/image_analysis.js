@@ -292,6 +292,198 @@ class ImageAnalysisDashboard {
         }
     }
     
+    displayStatistics(data) {
+        const container = document.getElementById('statisticsContent');
+        if (!container) return;
+        
+        let html = `
+            <div class="row g-4">
+                <!-- Brightness Statistics -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-sun me-2"></i>Brightness Analysis</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0 text-primary">${data.brightness.mean.toFixed(2)}</div>
+                                        <small class="text-muted">Mean</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0 text-success">${data.brightness.std.toFixed(2)}</div>
+                                        <small class="text-muted">Std Dev</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0 text-info">${data.brightness.min}</div>
+                                        <small class="text-muted">Min</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="h4 mb-0 text-warning">${data.brightness.max}</div>
+                                        <small class="text-muted">Max</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" style="width: ${(data.brightness.mean / 255 * 100).toFixed(1)}%"></div>
+                                </div>
+                                <small class="text-muted">Average brightness level</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Color Channel Statistics -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-palette me-2"></i>Color Channels</h6>
+                        </div>
+                        <div class="card-body">
+        `;
+        
+        if (data.channels && data.channels.channel_stats) {
+            Object.entries(data.channels.channel_stats).forEach(([channel, stats]) => {
+                const color = channel.toLowerCase() === 'red' ? 'danger' : 
+                             channel.toLowerCase() === 'green' ? 'success' : 
+                             channel.toLowerCase() === 'blue' ? 'primary' : 'secondary';
+                
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-${color}">${channel}</span>
+                        <span class="badge bg-${color}">${stats.mean.toFixed(1)}</span>
+                    </div>
+                `;
+            });
+        }
+        
+        html += `
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Texture Features -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-texture me-2"></i>Texture Analysis</h6>
+                        </div>
+                        <div class="card-body">
+        `;
+        
+        if (data.texture && !data.texture.error) {
+            html += `
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="bg-body-secondary p-2 rounded text-center">
+                            <div class="fw-bold text-primary">${(data.texture.edge_density * 100).toFixed(1)}%</div>
+                            <small class="text-muted">Edge Density</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-body-secondary p-2 rounded text-center">
+                            <div class="fw-bold text-success">${data.texture.edge_strength.toFixed(2)}</div>
+                            <small class="text-muted">Edge Strength</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-body-secondary p-2 rounded text-center">
+                            <div class="fw-bold text-info">${data.texture.laplacian_variance.toFixed(2)}</div>
+                            <small class="text-muted">Laplacian Var</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-body-secondary p-2 rounded text-center">
+                            <div class="fw-bold text-warning">${data.texture.local_binary_pattern_uniformity.toFixed(3)}</div>
+                            <small class="text-muted">LBP Uniformity</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Color Analysis -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-eye-dropper me-2"></i>Color Analysis</h6>
+                        </div>
+                        <div class="card-body">
+        `;
+        
+        if (data.color && !data.color.error && data.color.message !== 'Color analysis not applicable to grayscale images') {
+            html += `
+                <div class="row g-2">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Color Temperature</span>
+                            <span class="badge bg-${data.color.color_temperature === 'warm' ? 'warning' : 'info'}">${data.color.color_temperature}</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-body-secondary p-2 rounded text-center">
+                            <div class="fw-bold text-primary">${data.color.unique_colors.toLocaleString()}</div>
+                            <small class="text-muted">Unique Colors</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-body-secondary p-2 rounded text-center">
+                            <div class="fw-bold text-success">${(data.color.color_diversity * 100).toFixed(2)}%</div>
+                            <small class="text-muted">Color Diversity</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6 class="mb-2">HSV Analysis</h6>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="fw-bold text-danger">${data.color.hsv_analysis.hue_mean.toFixed(1)}</div>
+                                <small class="text-muted">Hue</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="fw-bold text-success">${data.color.hsv_analysis.saturation_mean.toFixed(1)}</div>
+                                <small class="text-muted">Saturation</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="fw-bold text-primary">${data.color.hsv_analysis.value_mean.toFixed(1)}</div>
+                                <small class="text-muted">Value</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `<div class="alert alert-info">Color analysis not available for grayscale images</div>`;
+        }
+        
+        html += `
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+    }
+    
     displayHistogram(data) {
         const container = document.getElementById('histogramContent');
         if (!container) return;
@@ -305,24 +497,27 @@ class ImageAnalysisDashboard {
                     y: data.red.values,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Red',
-                    line: { color: 'red', width: 2 }
+                    name: 'Red Channel',
+                    line: { color: '#ff4444', width: 2 },
+                    fill: 'tonexty'
                 },
                 {
                     x: data.green.bins,
                     y: data.green.values,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Green',
-                    line: { color: 'green', width: 2 }
+                    name: 'Green Channel',
+                    line: { color: '#44ff44', width: 2 },
+                    fill: 'tonexty'
                 },
                 {
                     x: data.blue.bins,
                     y: data.blue.values,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Blue',
-                    line: { color: 'blue', width: 2 }
+                    name: 'Blue Channel',
+                    line: { color: '#4444ff', width: 2 },
+                    fill: 'tonexty'
                 }
             );
         } else if (data.grayscale) {
@@ -332,19 +527,46 @@ class ImageAnalysisDashboard {
                 type: 'scatter',
                 mode: 'lines',
                 name: 'Grayscale',
-                line: { color: 'gray', width: 2 }
+                line: { color: '#888888', width: 3 },
+                fill: 'tozeroy'
             });
         }
         
         const layout = {
-            title: 'Image Histogram',
-            xaxis: { title: 'Pixel Value' },
-            yaxis: { title: 'Frequency' },
+            title: {
+                text: 'Image Histogram Analysis',
+                font: { size: 18, color: '#ffffff' }
+            },
+            xaxis: { 
+                title: 'Pixel Value (0-255)',
+                gridcolor: '#444444',
+                color: '#ffffff'
+            },
+            yaxis: { 
+                title: 'Frequency',
+                gridcolor: '#444444',
+                color: '#ffffff'
+            },
             template: 'plotly_dark',
-            margin: { t: 50, r: 50, b: 50, l: 50 }
+            margin: { t: 60, r: 50, b: 60, l: 60 },
+            showlegend: true,
+            legend: {
+                x: 0.7,
+                y: 0.9,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                bordercolor: '#444444',
+                borderwidth: 1
+            }
         };
         
-        Plotly.newPlot(container, traces, layout, { responsive: true });
+        const config = {
+            responsive: true,
+            displayModeBar: true,
+            modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d', 'autoScale2d'],
+            displaylogo: false
+        };
+        
+        Plotly.newPlot(container, traces, layout, config);
     }
     
     async handleImageComparison(event) {
@@ -459,6 +681,459 @@ class ImageAnalysisDashboard {
             });
         }
     }
+    
+    validateFileInput(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const maxSize = 16 * 1024 * 1024; // 16MB
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/tiff', 'image/webp'];
+        
+        if (file.size > maxSize) {
+            this.showError('File size exceeds 16MB limit');
+            event.target.value = '';
+            return false;
+        }
+        
+        if (!allowedTypes.includes(file.type)) {
+            this.showError('Invalid file type. Please upload PNG, JPG, JPEG, GIF, BMP, TIFF, or WEBP files.');
+            event.target.value = '';
+            return false;
+        }
+        
+        return true;
+    }
+    
+    handleFileDrop(event) {
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            const fileInput = event.target.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+    
+    showLoading(message = 'Loading...') {
+        this.isLoading = true;
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="text-light">${message}</div>
+            </div>
+        `;
+        document.body.appendChild(loadingOverlay);
+    }
+    
+    hideLoading() {
+        this.isLoading = false;
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
+    }
+    
+    showButtonLoading(button, message) {
+        const originalText = button.innerHTML;
+        button.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${message}`;
+        button.disabled = true;
+        button.setAttribute('data-original-text', originalText);
+    }
+    
+    hideButtonLoading(button, originalText) {
+        button.innerHTML = originalText || button.getAttribute('data-original-text') || button.innerHTML;
+        button.disabled = false;
+        button.removeAttribute('data-original-text');
+    }
+    
+    showError(message) {
+        this.showToast(message, 'error');
+    }
+    
+    showSuccess(message) {
+        this.showToast(message, 'success');
+    }
+    
+    showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer') || this.createToastContainer();
+        const toastId = 'toast-' + Date.now();
+        
+        const bgClass = type === 'error' ? 'bg-danger' : 
+                       type === 'success' ? 'bg-success' : 
+                       type === 'warning' ? 'bg-warning' : 'bg-info';
+        
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white ${bgClass} border-0`;
+        toast.id = toastId;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+    
+    createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+        return container;
+    }
+    
+    setCurrentImage(filename) {
+        this.currentImage = filename;
+    }
+}
+
+// Image conversion functions
+async function convertImage(type) {
+    const dashboard = window.imageDashboard;
+    if (!dashboard || !dashboard.currentImage) {
+        dashboard.showError('No image loaded');
+        return;
+    }
+    
+    try {
+        dashboard.showLoading(`Converting to ${type}...`);
+        
+        const response = await fetch(`/api/convert/${dashboard.currentImage}?type=${type}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            dashboard.showError(data.error);
+        } else {
+            dashboard.showSuccess(`Image converted to ${type}`);
+            displayConvertedImage(data.converted_filename, type);
+        }
+    } catch (error) {
+        console.error('Error converting image:', error);
+        dashboard.showError('Failed to convert image');
+    } finally {
+        dashboard.hideLoading();
+    }
+}
+
+// Image cropping functionality
+let cropMode = false;
+let cropStartX = 0;
+let cropStartY = 0;
+let cropEndX = 0;
+let cropEndY = 0;
+let cropBox = null;
+
+function enableCropMode() {
+    const dashboard = window.imageDashboard;
+    if (!dashboard || !dashboard.currentImage) {
+        dashboard.showError('No image loaded');
+        return;
+    }
+    
+    cropMode = true;
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+        mainImage.style.cursor = 'crosshair';
+        dashboard.showToast('Click and drag to select area to crop', 'info');
+        
+        // Add crop event listeners
+        mainImage.addEventListener('mousedown', startCrop);
+        mainImage.addEventListener('mousemove', drawCrop);
+        mainImage.addEventListener('mouseup', endCrop);
+        
+        // Add crop cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-outline-danger btn-sm crop-cancel-btn';
+        cancelBtn.innerHTML = '<i class="fas fa-times me-1"></i>Cancel Crop';
+        cancelBtn.style.position = 'absolute';
+        cancelBtn.style.top = '10px';
+        cancelBtn.style.right = '10px';
+        cancelBtn.style.zIndex = '1000';
+        cancelBtn.onclick = cancelCrop;
+        
+        const imageContainer = mainImage.parentElement;
+        imageContainer.style.position = 'relative';
+        imageContainer.appendChild(cancelBtn);
+    }
+}
+
+function startCrop(e) {
+    if (!cropMode) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    cropStartX = e.clientX - rect.left;
+    cropStartY = e.clientY - rect.top;
+    
+    // Create crop box
+    cropBox = document.createElement('div');
+    cropBox.className = 'crop-box';
+    cropBox.style.position = 'absolute';
+    cropBox.style.border = '2px dashed #007bff';
+    cropBox.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+    cropBox.style.pointerEvents = 'none';
+    cropBox.style.zIndex = '999';
+    
+    const imageContainer = e.target.parentElement;
+    imageContainer.appendChild(cropBox);
+}
+
+function drawCrop(e) {
+    if (!cropMode || !cropBox) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    cropEndX = e.clientX - rect.left;
+    cropEndY = e.clientY - rect.top;
+    
+    const x = Math.min(cropStartX, cropEndX);
+    const y = Math.min(cropStartY, cropEndY);
+    const width = Math.abs(cropEndX - cropStartX);
+    const height = Math.abs(cropEndY - cropStartY);
+    
+    cropBox.style.left = x + 'px';
+    cropBox.style.top = y + 'px';
+    cropBox.style.width = width + 'px';
+    cropBox.style.height = height + 'px';
+}
+
+function endCrop(e) {
+    if (!cropMode || !cropBox) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    const imageNaturalWidth = e.target.naturalWidth;
+    const imageNaturalHeight = e.target.naturalHeight;
+    const imageDisplayWidth = e.target.clientWidth;
+    const imageDisplayHeight = e.target.clientHeight;
+    
+    // Calculate scale factors
+    const scaleX = imageNaturalWidth / imageDisplayWidth;
+    const scaleY = imageNaturalHeight / imageDisplayHeight;
+    
+    // Convert to image coordinates
+    const x = Math.min(cropStartX, cropEndX) * scaleX;
+    const y = Math.min(cropStartY, cropEndY) * scaleY;
+    const width = Math.abs(cropEndX - cropStartX) * scaleX;
+    const height = Math.abs(cropEndY - cropStartY) * scaleY;
+    
+    if (width > 10 && height > 10) {
+        // Show crop confirmation
+        showCropConfirmation(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+    } else {
+        cancelCrop();
+    }
+}
+
+function showCropConfirmation(x, y, width, height) {
+    const dashboard = window.imageDashboard;
+    
+    const confirmDiv = document.createElement('div');
+    confirmDiv.className = 'crop-confirmation';
+    confirmDiv.innerHTML = `
+        <div class="alert alert-info">
+            <strong>Crop Selection:</strong> ${width}x${height} at (${x}, ${y})
+            <div class="mt-2">
+                <button class="btn btn-success btn-sm me-2" onclick="applyCrop(${x}, ${y}, ${width}, ${height})">
+                    <i class="fas fa-check me-1"></i>Apply Crop
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="cancelCrop()">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    const imageContainer = document.getElementById('mainImage').parentElement;
+    imageContainer.appendChild(confirmDiv);
+}
+
+async function applyCrop(x, y, width, height) {
+    const dashboard = window.imageDashboard;
+    
+    try {
+        dashboard.showLoading('Cropping image...');
+        
+        const response = await fetch(`/api/crop/${dashboard.currentImage}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ x, y, width, height })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            dashboard.showError(data.error);
+        } else {
+            dashboard.showSuccess('Image cropped successfully');
+            displayConvertedImage(data.cropped_filename, 'cropped');
+        }
+    } catch (error) {
+        console.error('Error cropping image:', error);
+        dashboard.showError('Failed to crop image');
+    } finally {
+        cancelCrop();
+        dashboard.hideLoading();
+    }
+}
+
+function cancelCrop() {
+    cropMode = false;
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+        mainImage.style.cursor = 'default';
+        mainImage.removeEventListener('mousedown', startCrop);
+        mainImage.removeEventListener('mousemove', drawCrop);
+        mainImage.removeEventListener('mouseup', endCrop);
+    }
+    
+    // Remove crop elements
+    const cropElements = document.querySelectorAll('.crop-box, .crop-cancel-btn, .crop-confirmation');
+    cropElements.forEach(element => element.remove());
+    
+    cropBox = null;
+}
+
+// Image rotation and flipping
+async function rotateImage(angle) {
+    const dashboard = window.imageDashboard;
+    if (!dashboard || !dashboard.currentImage) {
+        dashboard.showError('No image loaded');
+        return;
+    }
+    
+    try {
+        dashboard.showLoading('Rotating image...');
+        
+        const response = await fetch(`/api/rotate/${dashboard.currentImage}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ angle })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            dashboard.showError(data.error);
+        } else {
+            dashboard.showSuccess(`Image rotated ${angle}°`);
+            displayConvertedImage(data.rotated_filename, `rotated_${angle}`);
+        }
+    } catch (error) {
+        console.error('Error rotating image:', error);
+        dashboard.showError('Failed to rotate image');
+    } finally {
+        dashboard.hideLoading();
+    }
+}
+
+async function flipImage(direction) {
+    const dashboard = window.imageDashboard;
+    if (!dashboard || !dashboard.currentImage) {
+        dashboard.showError('No image loaded');
+        return;
+    }
+    
+    try {
+        dashboard.showLoading('Flipping image...');
+        
+        const response = await fetch(`/api/flip/${dashboard.currentImage}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ direction })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            dashboard.showError(data.error);
+        } else {
+            dashboard.showSuccess(`Image flipped ${direction}ly`);
+            displayConvertedImage(data.flipped_filename, `flipped_${direction}`);
+        }
+    } catch (error) {
+        console.error('Error flipping image:', error);
+        dashboard.showError('Failed to flip image');
+    } finally {
+        dashboard.hideLoading();
+    }
+}
+
+function displayConvertedImage(filename, type) {
+    const container = document.getElementById('convertedImages');
+    if (!container) return;
+    
+    // Clear existing content or initialize
+    if (container.innerHTML.includes('alert-info')) {
+        container.innerHTML = '<div class="converted-images"></div>';
+    }
+    
+    const imagesGrid = container.querySelector('.converted-images') || container;
+    
+    const imageCard = document.createElement('div');
+    imageCard.className = 'converted-image-card';
+    imageCard.innerHTML = `
+        <img src="/static/uploads/${filename}" alt="${type} conversion" class="img-fluid">
+        <div class="card-body">
+            <h6 class="card-title">${type.charAt(0).toUpperCase() + type.slice(1)}</h6>
+            <a href="/static/uploads/${filename}" download class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-download me-1"></i>Download
+            </a>
+        </div>
+    `;
+    
+    imagesGrid.appendChild(imageCard);
+}
+
+// Utility functions
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    window.imageDashboard = new ImageAnalysisDashboard();
+    
+    // Set current image from URL if on analysis page
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts[1] === 'analysis' && pathParts[2]) {
+        window.imageDashboard.setCurrentImage(pathParts[2]);
+    }
+});
     
     validateFileInput(event) {
         const file = event.target.files[0];

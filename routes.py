@@ -365,6 +365,120 @@ def not_found(e):
     """Handle 404 errors"""
     return render_template('index.html'), 404
 
+@app.route('/api/crop/<filename>', methods=['POST'])
+def crop_image(filename):
+    """Crop image to specified region"""
+    try:
+        if not allowed_file(filename):
+            return jsonify({'error': 'Invalid file type'}), 400
+        
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        x = int(data.get('x', 0))
+        y = int(data.get('y', 0))
+        width = int(data.get('width', 100))
+        height = int(data.get('height', 100))
+        
+        # Generate output filename
+        base_name = os.path.splitext(filename)[0]
+        ext = os.path.splitext(filename)[1]
+        output_filename = f"{base_name}_cropped_{uuid.uuid4().hex[:8]}{ext}"
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+        
+        # Crop image using ImageUtils
+        success = ImageUtils.crop_image(filepath, output_path, x, y, width, height)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'cropped_filename': output_filename,
+                'dimensions': f"{width}x{height}"
+            })
+        else:
+            return jsonify({'error': 'Failed to crop image'}), 500
+            
+    except Exception as e:
+        app.logger.error(f"Crop error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/rotate/<filename>', methods=['POST'])
+def rotate_image(filename):
+    """Rotate image by specified angle"""
+    try:
+        if not allowed_file(filename):
+            return jsonify({'error': 'Invalid file type'}), 400
+        
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        angle = float(data.get('angle', 0))
+        
+        # Generate output filename
+        base_name = os.path.splitext(filename)[0]
+        ext = os.path.splitext(filename)[1]
+        output_filename = f"{base_name}_rotated_{int(angle)}_{uuid.uuid4().hex[:8]}{ext}"
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+        
+        # Rotate image using ImageUtils
+        success = ImageUtils.rotate_image(filepath, output_path, angle)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'rotated_filename': output_filename,
+                'angle': angle
+            })
+        else:
+            return jsonify({'error': 'Failed to rotate image'}), 500
+            
+    except Exception as e:
+        app.logger.error(f"Rotate error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/flip/<filename>', methods=['POST'])
+def flip_image(filename):
+    """Flip image horizontally or vertically"""
+    try:
+        if not allowed_file(filename):
+            return jsonify({'error': 'Invalid file type'}), 400
+        
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        direction = data.get('direction', 'horizontal')
+        
+        if direction not in ['horizontal', 'vertical']:
+            return jsonify({'error': 'Invalid direction. Use horizontal or vertical'}), 400
+        
+        # Generate output filename
+        base_name = os.path.splitext(filename)[0]
+        ext = os.path.splitext(filename)[1]
+        output_filename = f"{base_name}_flipped_{direction}_{uuid.uuid4().hex[:8]}{ext}"
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+        
+        # Flip image using ImageUtils
+        success = ImageUtils.flip_image(filepath, output_path, direction)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'flipped_filename': output_filename,
+                'direction': direction
+            })
+        else:
+            return jsonify({'error': 'Failed to flip image'}), 500
+            
+    except Exception as e:
+        app.logger.error(f"Flip error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.errorhandler(500)
 def internal_error(e):
     """Handle internal server errors"""
