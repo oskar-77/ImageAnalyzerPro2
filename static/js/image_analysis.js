@@ -35,7 +35,7 @@ class ImageAnalysisDashboard {
         
         // Form submission handlers
         document.addEventListener('submit', (e) => {
-            if (e.target.id === 'compareForm') {
+            if (e.target.id === 'comparisonForm') {
                 e.preventDefault();
                 this.handleImageComparison(e);
             }
@@ -570,12 +570,30 @@ class ImageAnalysisDashboard {
     }
     
     async handleImageComparison(event) {
+        event.preventDefault();
+        
         const form = event.target;
-        const formData = new FormData(form);
+        const file2Input = form.querySelector('input[name="file2"]');
         const submitBtn = form.querySelector('button[type="submit"]');
+        
+        if (!file2Input.files[0]) {
+            this.showError('Please select an image to compare');
+            return;
+        }
         
         try {
             this.showButtonLoading(submitBtn, 'Comparing...');
+            
+            // Create FormData with both files
+            const formData = new FormData();
+            
+            // Get the current image file
+            const currentImageResponse = await fetch(`/static/uploads/${this.currentImage}`);
+            const currentImageBlob = await currentImageResponse.blob();
+            const currentImageFile = new File([currentImageBlob], this.currentImage, { type: currentImageBlob.type });
+            
+            formData.append('file1', currentImageFile);
+            formData.append('file2', file2Input.files[0]);
             
             const response = await fetch('/api/compare', {
                 method: 'POST',
@@ -1134,35 +1152,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.imageDashboard.setCurrentImage(pathParts[2]);
     }
 });
-    
-    validateFileInput(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const maxSize = 16 * 1024 * 1024; // 16MB
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
-        
-        if (file.size > maxSize) {
-            this.showError('File size must be less than 16MB');
-            event.target.value = '';
-            return;
-        }
-        
-        if (!allowedTypes.includes(file.type)) {
-            this.showError('Please select a valid image file (JPEG, PNG, GIF, BMP, WEBP)');
-            event.target.value = '';
-            return;
-        }
-        
-        this.showSuccess('File selected successfully');
-    }
-    
-    handleFileDrop(event) {
-        const files = event.dataTransfer.files;
-        if (files.length > 0) {
-            const fileInput = event.target.querySelector('input[type="file"]');
-            if (fileInput) {
-                fileInput.files = files;
                 this.validateFileInput({ target: fileInput });
             }
         }

@@ -1,253 +1,277 @@
 {% extends "base.html" %}
 
-{% block title %}Image Analysis - {{ filename }}{% endblock %}
+{% block title %}Analysis - {{ filename }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="fas fa-microscope text-primary me-2"></i>
-                Image Analysis
-            </h1>
-            <div>
-                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Home
-                </a>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-image me-2"></i>{{ filename }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="image-container position-relative">
+                        <img id="mainImage" src="{{ url_for('static', filename='uploads/' + filename) }}" 
+                             alt="Analysis Image" class="img-fluid rounded image-clickable">
+                        <div id="clickOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none">
+                            <div id="clickMarker" class="pixel-marker"></div>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Click on the image to explore pixel values</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Image Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="imageInfo">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-crosshairs me-2"></i>Pixel Values
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="pixelValues">
+                        <div class="alert alert-info">
+                            Click on the image to see pixel values
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-palette me-2"></i>Color Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="colorInfo">
+                        <div class="alert alert-info">
+                            Click on the image to see color information
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#statistics" role="tab">
+                                <i class="fas fa-chart-bar me-2"></i>Statistics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#histogram" role="tab">
+                                <i class="fas fa-chart-line me-2"></i>Histogram
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#conversions" role="tab">
+                                <i class="fas fa-magic me-2"></i>Conversions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#comparison" role="tab">
+                                <i class="fas fa-balance-scale me-2"></i>Comparison
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#reports" role="tab">
+                                <i class="fas fa-file-download me-2"></i>Reports
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Statistics Tab -->
+                        <div class="tab-pane fade show active" id="statistics" role="tabpanel">
+                            <div id="statisticsContent">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading statistics...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Histogram Tab -->
+                        <div class="tab-pane fade" id="histogram" role="tabpanel">
+                            <div id="histogramContent">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading histogram...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conversions Tab -->
+                        <div class="tab-pane fade" id="conversions" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Available Conversions</h6>
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-outline-primary" onclick="convertImage('grayscale')">
+                                                    <i class="fas fa-palette me-2"></i>Convert to Grayscale
+                                                </button>
+                                                <button class="btn btn-outline-primary" onclick="convertImage('binary')">
+                                                    <i class="fas fa-circle me-2"></i>Convert to Binary
+                                                </button>
+                                                <button class="btn btn-outline-primary" onclick="convertImage('hsv')">
+                                                    <i class="fas fa-adjust me-2"></i>Convert to HSV
+                                                </button>
+                                            </div>
+                                            
+                                            <hr class="my-4">
+                                            
+                                            <h6 class="card-title">Image Tools</h6>
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-outline-success" onclick="enableCropMode()">
+                                                    <i class="fas fa-crop me-2"></i>Crop Image
+                                                </button>
+                                                <button class="btn btn-outline-info" onclick="rotateImage(90)">
+                                                    <i class="fas fa-rotate-right me-2"></i>Rotate 90°
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="flipImage('horizontal')">
+                                                    <i class="fas fa-arrows-alt-h me-2"></i>Flip Horizontal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Converted Images</h6>
+                                            <div id="convertedImages">
+                                                <div class="alert alert-info">
+                                                    Converted images will appear here
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comparison Tab -->
+                        <div class="tab-pane fade" id="comparison" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Compare with Another Image</h6>
+                                            <form id="comparisonForm" enctype="multipart/form-data">
+                                                <div class="mb-3">
+                                                    <label for="comparisonImage" class="form-label">Select Image to Compare</label>
+                                                    <input type="file" class="form-control" id="comparisonImage" name="file2" accept="image/*" required>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-balance-scale me-2"></i>Compare Images
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Comparison Metrics</h6>
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>Structural Similarity (SSIM)</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Peak Signal-to-Noise Ratio (PSNR)</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Mean Squared Error (MSE)</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Histogram Comparison</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Visual Difference Map</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reports Tab -->
+                        <div class="tab-pane fade" id="reports" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Download Reports</h6>
+                                            <div class="d-grid gap-2">
+                                                <a href="/api/report/{{ filename }}?format=txt" class="btn btn-outline-success">
+                                                    <i class="fas fa-file-alt me-2"></i>Download TXT Report
+                                                </a>
+                                                <a href="/api/report/{{ filename }}?format=png" class="btn btn-outline-success">
+                                                    <i class="fas fa-file-image me-2"></i>Download PNG Report
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Report Contents</h6>
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>Image dimensions and format</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Brightness statistics</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Color channel analysis</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Histogram data</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Texture features</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Image Display and Controls -->
-<div class="row mb-4">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-image me-2"></i>{{ filename }}
+<!-- Comparison Results Modal -->
+<div class="modal fade" id="comparisonModal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="comparisonModalLabel">
+                    <i class="fas fa-balance-scale me-2"></i>Image Comparison Results
                 </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <div class="position-relative">
-                    <img id="mainImage" 
-                         src="{{ url_for('static', filename='uploads/' + filename) }}" 
-                         class="img-fluid border rounded shadow-sm"
-                         alt="Main Image"
-                         style="cursor: crosshair; max-width: 100%; height: auto;">
-                    
-                    <!-- Click coordinates overlay -->
-                    <div id="clickOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none">
-                        <div id="clickMarker" class="position-absolute bg-danger rounded-circle" 
-                             style="width: 10px; height: 10px; transform: translate(-50%, -50%);"></div>
-                    </div>
-                </div>
-                
-                <div class="mt-3">
-                    <small class="text-muted">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Click on any pixel to explore its values
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-info-circle me-2"></i>Image Information
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="imageInfo">
-                    <div class="text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Analysis Tabs -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="analysisTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="pixel-tab" data-bs-toggle="tab" data-bs-target="#pixel" type="button" role="tab">
-                            <i class="fas fa-dot-circle me-2"></i>Pixel Explorer
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
-                            <i class="fas fa-chart-bar me-2"></i>Statistics
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="histogram-tab" data-bs-toggle="tab" data-bs-target="#histogram" type="button" role="tab">
-                            <i class="fas fa-chart-area me-2"></i>Histogram
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="conversions-tab" data-bs-toggle="tab" data-bs-target="#conversions" type="button" role="tab">
-                            <i class="fas fa-exchange-alt me-2"></i>Conversions
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
-                            <i class="fas fa-download me-2"></i>Reports
-                        </button>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="card-body">
-                <div class="tab-content" id="analysisTabContent">
-                    <!-- Pixel Explorer Tab -->
-                    <div class="tab-pane fade show active" id="pixel" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Pixel Values</h6>
-                                        <div id="pixelValues">
-                                            <div class="alert alert-info">
-                                                <i class="fas fa-mouse-pointer me-2"></i>
-                                                Click on the image to explore pixel values
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Color Information</h6>
-                                        <div id="colorInfo">
-                                            <div class="alert alert-info">
-                                                Color information will appear here
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Statistics Tab -->
-                    <div class="tab-pane fade" id="statistics" role="tabpanel">
-                        <div id="statisticsContent">
-                            <div class="text-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading statistics...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Histogram Tab -->
-                    <div class="tab-pane fade" id="histogram" role="tabpanel">
-                        <div id="histogramContent">
-                            <div class="text-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading histogram...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Conversions Tab -->
-                    <div class="tab-pane fade" id="conversions" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Available Conversions</h6>
-                                        <div class="d-grid gap-2">
-                                            <button class="btn btn-outline-primary" onclick="convertImage('grayscale')">
-                                                <i class="fas fa-palette me-2"></i>Convert to Grayscale
-                                            </button>
-                                            <button class="btn btn-outline-primary" onclick="convertImage('binary')">
-                                                <i class="fas fa-circle me-2"></i>Convert to Binary
-                                            </button>
-                                            <button class="btn btn-outline-primary" onclick="convertImage('hsv')">
-                                                <i class="fas fa-adjust me-2"></i>Convert to HSV
-                                            </button>
-                                        </div>
-                                        
-                                        <hr class="my-4">
-                                        
-                                        <h6 class="card-title">Image Tools</h6>
-                                        <div class="d-grid gap-2">
-                                            <button class="btn btn-outline-success" onclick="enableCropMode()">
-                                                <i class="fas fa-crop me-2"></i>Crop Image
-                                            </button>
-                                            <button class="btn btn-outline-info" onclick="rotateImage(90)">
-                                                <i class="fas fa-rotate-right me-2"></i>Rotate 90°
-                                            </button>
-                                            <button class="btn btn-outline-warning" onclick="flipImage('horizontal')">
-                                                <i class="fas fa-arrows-alt-h me-2"></i>Flip Horizontal
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Converted Images</h6>
-                                        <div id="convertedImages">
-                                            <div class="alert alert-info">
-                                                Converted images will appear here
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Reports Tab -->
-                    <div class="tab-pane fade" id="reports" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Generate Reports</h6>
-                                        <p class="card-text">Download comprehensive analysis reports in different formats.</p>
-                                        <div class="d-grid gap-2">
-                                            <a href="/api/report/{{ filename }}?format=txt" class="btn btn-outline-success">
-                                                <i class="fas fa-file-alt me-2"></i>Download TXT Report
-                                            </a>
-                                            <a href="/api/report/{{ filename }}?format=png" class="btn btn-outline-success">
-                                                <i class="fas fa-file-image me-2"></i>Download PNG Report
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Report Contents</h6>
-                                        <ul class="list-unstyled">
-                                            <li><i class="fas fa-check text-success me-2"></i>Image dimensions and format</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Brightness statistics</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Color channel analysis</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Histogram data</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Texture features</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="modal-body">
+                <div id="comparisonResults">
+                    <!-- Results will be populated here -->
                 </div>
             </div>
         </div>
@@ -255,471 +279,38 @@
 </div>
 
 <script>
-// Global variables
-let currentFilename = '{{ filename }}';
-let imageInfo = null;
-let statisticsData = null;
-let histogramData = null;
-
-// Initialize the analysis page
+// Set current image filename for the dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    loadImageInfo();
-    setupImageClickHandler();
-    setupTabChangeHandlers();
+    if (window.imageDashboard) {
+        window.imageDashboard.setCurrentImage('{{ filename }}');
+    }
+    
+    // Setup comparison form
+    const comparisonForm = document.getElementById('comparisonForm');
+    if (comparisonForm) {
+        comparisonForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const file1 = new File([''], '{{ filename }}', {type: 'image/jpeg'});
+            const file2 = document.getElementById('comparisonImage').files[0];
+            
+            if (!file2) {
+                alert('Please select an image to compare');
+                return;
+            }
+            
+            // Create form data for comparison
+            formData.append('file1', file1);
+            formData.append('file2', file2);
+            
+            // Handle the comparison
+            if (window.imageDashboard && window.imageDashboard.handleImageComparison) {
+                window.imageDashboard.handleImageComparison(e);
+            }
+        });
+    }
 });
-
-// Load basic image information
-function loadImageInfo() {
-    fetch(`/api/image_info/${currentFilename}`)
-        .then(response => response.json())
-        .then(data => {
-            imageInfo = data;
-            displayImageInfo(data);
-        })
-        .catch(error => {
-            console.error('Error loading image info:', error);
-            document.getElementById('imageInfo').innerHTML = '<div class="alert alert-danger">Error loading image information</div>';
-        });
-}
-
-// Display image information
-function displayImageInfo(data) {
-    const html = `
-        <div class="row g-3">
-            <div class="col-6">
-                <div class="text-center">
-                    <div class="h5 mb-0">${data.width}×${data.height}</div>
-                    <small class="text-muted">Dimensions</small>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="text-center">
-                    <div class="h5 mb-0">${data.channels}</div>
-                    <small class="text-muted">Channels</small>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="text-center">
-                    <div class="h5 mb-0">${(data.file_size / 1024).toFixed(1)}KB</div>
-                    <small class="text-muted">File Size</small>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="text-center">
-                    <div class="h5 mb-0">${data.format}</div>
-                    <small class="text-muted">Format</small>
-                </div>
-            </div>
-        </div>
-    `;
-    document.getElementById('imageInfo').innerHTML = html;
-}
-
-// Setup image click handler for pixel exploration
-function setupImageClickHandler() {
-    const image = document.getElementById('mainImage');
-    const overlay = document.getElementById('clickOverlay');
-    const marker = document.getElementById('clickMarker');
-    
-    image.addEventListener('click', function(e) {
-        const rect = image.getBoundingClientRect();
-        const scaleX = image.naturalWidth / image.width;
-        const scaleY = image.naturalHeight / image.height;
-        
-        const x = Math.round((e.clientX - rect.left) * scaleX);
-        const y = Math.round((e.clientY - rect.top) * scaleY);
-        
-        // Show marker
-        overlay.classList.remove('d-none');
-        marker.style.left = `${(e.clientX - rect.left)}px`;
-        marker.style.top = `${(e.clientY - rect.top)}px`;
-        
-        // Get pixel value
-        getPixelValue(x, y);
-    });
-}
-
-// Get pixel value at coordinates
-function getPixelValue(x, y) {
-    fetch(`/api/pixel_value/${currentFilename}?x=${x}&y=${y}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                displayPixelError(data.error);
-            } else {
-                displayPixelValue(data);
-            }
-        })
-        .catch(error => {
-            console.error('Error getting pixel value:', error);
-            displayPixelError('Failed to get pixel value');
-        });
-}
-
-// Display pixel value information
-function displayPixelValue(data) {
-    const pixelHtml = `
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="bg-light p-2 rounded">
-                    <strong>Position:</strong> (${data.coordinates.x}, ${data.coordinates.y})
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="bg-light p-2 rounded">
-                    <strong>RGB:</strong><br>
-                    R: ${data.rgb.r}<br>
-                    G: ${data.rgb.g}<br>
-                    B: ${data.rgb.b}
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="bg-light p-2 rounded">
-                    <strong>HSV:</strong><br>
-                    H: ${data.hsv.h}<br>
-                    S: ${data.hsv.s}<br>
-                    V: ${data.hsv.v}
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="bg-light p-2 rounded">
-                    <strong>LAB:</strong><br>
-                    L: ${data.lab.l}<br>
-                    A: ${data.lab.a}<br>
-                    B: ${data.lab.b}
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="bg-light p-2 rounded">
-                    <strong>Brightness:</strong><br>
-                    ${data.brightness.toFixed(2)}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const colorHtml = `
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="color-swatch me-3" style="width: 50px; height: 50px; background-color: ${data.hex}; border: 1px solid #ccc; border-radius: 4px;"></div>
-                    <div>
-                        <strong>Hex:</strong> ${data.hex}<br>
-                        <strong>RGB:</strong> rgb(${data.rgb.r}, ${data.rgb.g}, ${data.rgb.b})
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('pixelValues').innerHTML = pixelHtml;
-    document.getElementById('colorInfo').innerHTML = colorHtml;
-}
-
-// Display pixel error
-function displayPixelError(error) {
-    const errorHtml = `<div class="alert alert-danger">${error}</div>`;
-    document.getElementById('pixelValues').innerHTML = errorHtml;
-    document.getElementById('colorInfo').innerHTML = errorHtml;
-}
-
-// Setup tab change handlers
-function setupTabChangeHandlers() {
-    const statisticsTab = document.getElementById('statistics-tab');
-    const histogramTab = document.getElementById('histogram-tab');
-    
-    statisticsTab.addEventListener('click', function() {
-        if (!statisticsData) {
-            loadStatistics();
-        }
-    });
-    
-    histogramTab.addEventListener('click', function() {
-        if (!histogramData) {
-            loadHistogram();
-        }
-    });
-}
-
-// Load statistics data
-function loadStatistics() {
-    fetch(`/api/statistics/${currentFilename}`)
-        .then(response => response.json())
-        .then(data => {
-            statisticsData = data;
-            displayStatistics(data);
-        })
-        .catch(error => {
-            console.error('Error loading statistics:', error);
-            document.getElementById('statisticsContent').innerHTML = '<div class="alert alert-danger">Error loading statistics</div>';
-        });
-}
-
-// Display statistics
-function displayStatistics(data) {
-    if (data.error) {
-        document.getElementById('statisticsContent').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-        return;
-    }
-    
-    let html = '<div class="row">';
-    
-    // Brightness statistics
-    if (data.brightness && !data.brightness.error) {
-        html += `
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Brightness Statistics</h6>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Mean:</strong> ${data.brightness.mean.toFixed(2)}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Std Dev:</strong> ${data.brightness.std.toFixed(2)}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Min:</strong> ${data.brightness.min}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Max:</strong> ${data.brightness.max}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Median:</strong> ${data.brightness.median.toFixed(2)}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Entropy:</strong> ${data.brightness.entropy.toFixed(2)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Channel statistics
-    if (data.channels && data.channels.channel_stats) {
-        html += `
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Channel Statistics</h6>
-                        <div class="row g-2">
-        `;
-        
-        for (const [channel, stats] of Object.entries(data.channels.channel_stats)) {
-            html += `
-                <div class="col-12 mb-2">
-                    <div class="bg-light p-2 rounded">
-                        <strong>${channel}:</strong><br>
-                        Mean: ${stats.mean.toFixed(2)}, Std: ${stats.std.toFixed(2)}<br>
-                        Min: ${stats.min}, Max: ${stats.max}
-                    </div>
-                </div>
-            `;
-        }
-        
-        html += `
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Texture features
-    if (data.texture && !data.texture.error) {
-        html += `
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Texture Features</h6>
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Edge Density:</strong> ${data.texture.edge_density.toFixed(4)}
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Edge Strength:</strong> ${data.texture.edge_strength.toFixed(2)}
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Laplacian Variance:</strong> ${data.texture.laplacian_variance.toFixed(2)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Color analysis
-    if (data.color && !data.color.error && data.color.message === undefined) {
-        html += `
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">Color Analysis</h6>
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Unique Colors:</strong> ${data.color.unique_colors.toLocaleString()}
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Color Diversity:</strong> ${(data.color.color_diversity * 100).toFixed(4)}%
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="bg-light p-2 rounded">
-                                    <strong>Temperature:</strong> ${data.color.color_temperature}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    html += '</div>';
-    
-    document.getElementById('statisticsContent').innerHTML = html;
-}
-
-// Load histogram data
-function loadHistogram() {
-    fetch(`/api/histogram/${currentFilename}`)
-        .then(response => response.json())
-        .then(data => {
-            histogramData = data;
-            displayHistogram(data);
-        })
-        .catch(error => {
-            console.error('Error loading histogram:', error);
-            document.getElementById('histogramContent').innerHTML = '<div class="alert alert-danger">Error loading histogram</div>';
-        });
-}
-
-// Display histogram
-function displayHistogram(data) {
-    if (data.error) {
-        document.getElementById('histogramContent').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-        return;
-    }
-    
-    // Create Plotly histogram
-    const traces = [];
-    
-    if (data.red && data.green && data.blue) {
-        // Color histograms
-        traces.push({
-            x: data.red.bins,
-            y: data.red.values,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Red',
-            line: { color: 'red' }
-        });
-        
-        traces.push({
-            x: data.green.bins,
-            y: data.green.values,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Green',
-            line: { color: 'green' }
-        });
-        
-        traces.push({
-            x: data.blue.bins,
-            y: data.blue.values,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Blue',
-            line: { color: 'blue' }
-        });
-    } else if (data.grayscale) {
-        // Grayscale histogram
-        traces.push({
-            x: data.grayscale.bins,
-            y: data.grayscale.values,
-            type: 'scatter',
-            mode: 'lines',
-            name: 'Grayscale',
-            line: { color: 'gray' }
-        });
-    }
-    
-    const layout = {
-        title: 'Image Histogram',
-        xaxis: { title: 'Pixel Value' },
-        yaxis: { title: 'Frequency' },
-        template: 'plotly_dark'
-    };
-    
-    Plotly.newPlot('histogramContent', traces, layout);
-}
-
-// Convert image
-function convertImage(type) {
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Converting...';
-    button.disabled = true;
-    
-    fetch(`/api/convert/${currentFilename}?type=${type}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error: ' + data.error);
-            } else {
-                displayConvertedImage(data.converted_filename, type);
-            }
-        })
-        .catch(error => {
-            console.error('Error converting image:', error);
-            alert('An error occurred during conversion.');
-        })
-        .finally(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        });
-}
-
-// Display converted image
-function displayConvertedImage(filename, type) {
-    const convertedDiv = document.getElementById('convertedImages');
-    
-    if (convertedDiv.innerHTML.includes('alert-info')) {
-        convertedDiv.innerHTML = '';
-    }
-    
-    const imageHtml = `
-        <div class="mb-3">
-            <h6>${type.charAt(0).toUpperCase() + type.slice(1)} Version</h6>
-            <img src="/static/uploads/${filename}" class="img-fluid border rounded" alt="${type} version">
-        </div>
-    `;
-    
-    convertedDiv.innerHTML += imageHtml;
-}
 </script>
+
 {% endblock %}
