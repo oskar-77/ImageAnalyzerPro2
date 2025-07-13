@@ -224,17 +224,45 @@
                         <!-- Reports Tab -->
                         <div class="tab-pane fade" id="reports" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h6 class="card-title">Download Reports</h6>
-                                            <div class="d-grid gap-2">
-                                                <a href="/api/report/{{ filename }}?format=txt" class="btn btn-outline-success">
-                                                    <i class="fas fa-file-alt me-2"></i>Download TXT Report
-                                                </a>
-                                                <a href="/api/report/{{ filename }}?format=png" class="btn btn-outline-success">
-                                                    <i class="fas fa-file-image me-2"></i>Download PNG Report
-                                                </a>
+                                            <h6 class="card-title">Generate Analysis Report</h6>
+                                            <p class="card-text">Generate a comprehensive analysis report with visualizations and statistics.</p>
+                                            
+                                            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                                                <button class="btn btn-primary" id="previewReportBtn" onclick="previewReport()">
+                                                    <i class="fas fa-eye me-2"></i>Preview Report
+                                                </button>
+                                                <button class="btn btn-success" id="downloadReportBtn" onclick="downloadReport()" disabled>
+                                                    <i class="fas fa-download me-2"></i>Download Report
+                                                </button>
+                                            </div>
+                                            
+                                            <div id="reportPreview" class="mt-4" style="display: none;">
+                                                <h6 class="text-muted">Report Preview</h6>
+                                                <div class="border rounded p-3 bg-body-secondary">
+                                                    <div id="reportPreviewContent"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Export Options</h6>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="reportFormat" id="pngReport" value="png" checked>
+                                                <label class="form-check-label" for="pngReport">
+                                                    <i class="fas fa-file-image me-2"></i>PNG Image
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="reportFormat" id="txtReport" value="txt">
+                                                <label class="form-check-label" for="txtReport">
+                                                    <i class="fas fa-file-alt me-2"></i>Text Report
+                                                </label>
                                             </div>
                                         </div>
                                     </div>

@@ -271,7 +271,7 @@ def compare_images():
         return jsonify({'error': 'Failed to compare images'}), 500
 
 
-@app.route('/api/report/<filename>')
+@app.route('/generate_report/<filename>')
 def generate_report(filename):
     """Generate and download analysis report"""
     try:

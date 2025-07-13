@@ -309,14 +309,10 @@ class ImageAnalysisDashboard {
         
         switch (tabId) {
             case '#statistics':
-                if (!this.statisticsData) {
-                    this.loadStatistics();
-                }
+                this.loadStatistics();
                 break;
             case '#histogram':
-                if (!this.histogramData) {
-                    this.loadHistogram();
-                }
+                this.loadHistogram();
                 break;
         }
     }
@@ -1225,6 +1221,175 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// Report Preview and Download Functions
+async function previewReport() {
+    const filename = window.imageDashboard.currentImage;
+    if (!filename) {
+        alert('No image selected');
+        return;
+    }
+    
+    const previewBtn = document.getElementById('previewReportBtn');
+    const downloadBtn = document.getElementById('downloadReportBtn');
+    const previewDiv = document.getElementById('reportPreview');
+    const previewContent = document.getElementById('reportPreviewContent');
+    
+    try {
+        // Show loading state
+        previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Preview...';
+        previewBtn.disabled = true;
+        
+        // Load all data needed for report
+        const [imageInfoResponse, statisticsResponse, histogramResponse] = await Promise.all([
+            fetch(`/api/image_info/${filename}`),
+            fetch(`/api/statistics/${filename}`),
+            fetch(`/api/histogram/${filename}`)
+        ]);
+        
+        const imageInfo = await imageInfoResponse.json();
+        const statistics = await statisticsResponse.json();
+        const histogram = await histogramResponse.json();
+        
+        // Generate preview content
+        const previewHtml = generateReportPreview(imageInfo, statistics, histogram);
+        previewContent.innerHTML = previewHtml;
+        
+        // Show preview section
+        previewDiv.style.display = 'block';
+        downloadBtn.disabled = false;
+        
+    } catch (error) {
+        console.error('Error generating preview:', error);
+        alert('Failed to generate report preview');
+    } finally {
+        previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>Preview Report';
+        previewBtn.disabled = false;
+    }
+}
+
+function generateReportPreview(imageInfo, statistics, histogram) {
+    const formatBytes = (bytes) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+    
+    return `
+        <div class="report-preview">
+            <h5 class="text-primary mb-3">Image Analysis Report</h5>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Image Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr><td>Dimensions:</td><td>${imageInfo.width} × ${imageInfo.height}</td></tr>
+                                <tr><td>Format:</td><td>${imageInfo.format}</td></tr>
+                                <tr><td>Channels:</td><td>${imageInfo.channels}</td></tr>
+                                <tr><td>File Size:</td><td>${formatBytes(imageInfo.file_size)}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Brightness Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr><td>Mean:</td><td>${statistics.brightness.mean.toFixed(2)}</td></tr>
+                                <tr><td>Std Dev:</td><td>${statistics.brightness.std.toFixed(2)}</td></tr>
+                                <tr><td>Min:</td><td>${statistics.brightness.min}</td></tr>
+                                <tr><td>Max:</td><td>${statistics.brightness.max}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Color Channels</h6>
+                        </div>
+                        <div class="card-body">
+                            ${statistics.channels && statistics.channels.channel_stats ? 
+                                Object.entries(statistics.channels.channel_stats).map(([channel, stats]) => 
+                                    `<div class="d-flex justify-content-between">
+                                        <span>${channel}:</span>
+                                        <span>${stats.mean.toFixed(1)}</span>
+                                    </div>`
+                                ).join('') : 
+                                '<div class="text-muted">No color channel data available</div>'
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Texture Features</h6>
+                        </div>
+                        <div class="card-body">
+                            ${statistics.texture && !statistics.texture.error ? 
+                                `<table class="table table-sm">
+                                    <tr><td>Edge Density:</td><td>${(statistics.texture.edge_density * 100).toFixed(1)}%</td></tr>
+                                    <tr><td>Edge Strength:</td><td>${statistics.texture.edge_strength.toFixed(2)}</td></tr>
+                                    <tr><td>Laplacian Var:</td><td>${statistics.texture.laplacian_variance.toFixed(2)}</td></tr>
+                                    <tr><td>LBP Uniformity:</td><td>${statistics.texture.local_binary_pattern_uniformity.toFixed(3)}</td></tr>
+                                </table>` : 
+                                '<div class="text-muted">Texture analysis not available</div>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3 alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                This is a preview of your analysis report. Click "Download Report" to get the complete version with charts and visualizations.
+            </div>
+        </div>
+    `;
+}
+
+function downloadReport() {
+    const filename = window.imageDashboard.currentImage;
+    if (!filename) {
+        alert('No image selected');
+        return;
+    }
+    
+    const format = document.querySelector('input[name="reportFormat"]:checked').value;
+    const downloadBtn = document.getElementById('downloadReportBtn');
+    
+    // Show loading state
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Downloading...';
+    downloadBtn.disabled = true;
+    
+    // Create download link
+    const downloadUrl = `/generate_report/${filename}?format=${format}`;
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `${filename}_report.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset button state
+    setTimeout(() => {
+        downloadBtn.innerHTML = '<i class="fas fa-download me-2"></i>Download Report';
+        downloadBtn.disabled = false;
+    }, 2000);
 }
 
 // Initialize dashboard when DOM is loaded
