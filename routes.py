@@ -21,6 +21,14 @@ from modules.image_statistics import ImageStatistics
 from modules.image_conversion import ImageConversion
 from modules.image_comparison import ImageComparison
 from modules.image_utils import ImageUtils
+from modules.digital_images import DigitalImages
+from modules.color_spaces import ColorSpaces
+from modules.masks import Masks
+from modules.blending_effects import BlendingEffects
+from modules.noise_smoothing import NoiseSmoothing
+from modules.edge_detection import EdgeDetection
+from modules.histogram_enhancement import HistogramEnhancement
+from modules.thresholding import Thresholding
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}
@@ -538,6 +546,463 @@ def flip_image(filename):
 
     except Exception as e:
         app.logger.error(f"Flip error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Digital Images Module Routes
+@app.route('/api/digital_properties/<filename>')
+def digital_properties(filename):
+    """Get comprehensive digital properties of image"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        digital_images = DigitalImages(filepath)
+        properties = digital_images.get_digital_properties()
+        return jsonify(properties)
+    
+    except Exception as e:
+        app.logger.error(f"Digital properties error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/pixel_matrix/<filename>')
+def pixel_matrix(filename):
+    """Get pixel matrix around coordinates"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        x = int(request.args.get('x', 0))
+        y = int(request.args.get('y', 0))
+        size = int(request.args.get('size', 5))
+        
+        digital_images = DigitalImages(filepath)
+        matrix = digital_images.get_pixel_matrix(x, y, size)
+        return jsonify(matrix)
+    
+    except Exception as e:
+        app.logger.error(f"Pixel matrix error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/bit_planes/<filename>')
+def bit_planes(filename):
+    """Analyze bit planes of image"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        digital_images = DigitalImages(filepath)
+        analysis = digital_images.analyze_bit_planes()
+        return jsonify(analysis)
+    
+    except Exception as e:
+        app.logger.error(f"Bit planes error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Color Spaces Module Routes
+@app.route('/api/color_spaces/<filename>')
+def color_spaces_conversion(filename):
+    """Convert image to all color spaces"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        color_spaces = ColorSpaces(filepath)
+        conversions = color_spaces.convert_all_color_spaces()
+        
+        # Remove large data arrays for JSON response, keep only descriptions
+        if 'conversions' in conversions:
+            for space_name, space_data in conversions['conversions'].items():
+                if 'data' in space_data:
+                    space_data.pop('data')  # Remove large numpy arrays
+        
+        return jsonify(conversions)
+    
+    except Exception as e:
+        app.logger.error(f"Color spaces error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/color_comparison/<filename>')
+def color_comparison(filename):
+    """Compare pixel values across color spaces"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        x = int(request.args.get('x', 0))
+        y = int(request.args.get('y', 0))
+        
+        color_spaces = ColorSpaces(filepath)
+        comparison = color_spaces.compare_color_spaces(x, y)
+        return jsonify(comparison)
+    
+    except Exception as e:
+        app.logger.error(f"Color comparison error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/color_distribution/<filename>')
+def color_distribution(filename):
+    """Analyze color distribution in specified color space"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        color_space = request.args.get('color_space', 'hsv')
+        
+        color_spaces = ColorSpaces(filepath)
+        distribution = color_spaces.analyze_color_distribution(color_space)
+        return jsonify(distribution)
+    
+    except Exception as e:
+        app.logger.error(f"Color distribution error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/color_palette/<filename>')
+def color_palette(filename):
+    """Extract dominant color palette"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        n_colors = int(request.args.get('n_colors', 8))
+        color_space = request.args.get('color_space', 'rgb')
+        
+        color_spaces = ColorSpaces(filepath)
+        palette = color_spaces.extract_color_palette(n_colors, color_space)
+        return jsonify(palette)
+    
+    except Exception as e:
+        app.logger.error(f"Color palette error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Masks Module Routes
+@app.route('/api/create_mask/<filename>', methods=['POST'])
+def create_mask(filename):
+    """Create geometric or color-based mask"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        mask_type = data.get('type', 'geometric')
+        
+        masks = Masks(filepath)
+        
+        if mask_type == 'geometric':
+            shape = data.get('shape', 'circle')
+            params = data.get('params', {})
+            result = masks.create_geometric_mask(shape, params)
+        elif mask_type == 'color':
+            color_space = data.get('color_space', 'hsv')
+            result = masks.create_color_mask(color_space, **data.get('params', {}))
+        elif mask_type == 'threshold':
+            method = data.get('method', 'global')
+            result = masks.create_threshold_mask(method, **data.get('params', {}))
+        else:
+            return jsonify({'error': 'Invalid mask type'}), 400
+        
+        # Convert numpy arrays to lists for JSON serialization
+        if 'mask' in result:
+            result['mask'] = result['mask'].tolist()
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f"Create mask error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Edge Detection Module Routes
+@app.route('/api/edge_detection/<filename>')
+def edge_detection(filename):
+    """Apply edge detection algorithms"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        method = request.args.get('method', 'canny')
+        
+        edge_detector = EdgeDetection(filepath)
+        
+        if method == 'canny':
+            low_thresh = int(request.args.get('low_threshold', 50))
+            high_thresh = int(request.args.get('high_threshold', 150))
+            result = edge_detector.apply_canny(low_thresh, high_thresh)
+        elif method == 'sobel':
+            ksize = int(request.args.get('ksize', 3))
+            result = edge_detector.apply_sobel(ksize)
+        elif method == 'laplacian':
+            ksize = int(request.args.get('ksize', 3))
+            result = edge_detector.apply_laplacian(ksize)
+        elif method == 'scharr':
+            result = edge_detector.apply_scharr()
+        elif method == 'prewitt':
+            result = edge_detector.apply_prewitt()
+        elif method == 'roberts':
+            result = edge_detector.apply_roberts()
+        elif method == 'log':
+            sigma = float(request.args.get('sigma', 1.0))
+            result = edge_detector.apply_log(sigma)
+        elif method == 'compare':
+            result = edge_detector.compare_edge_detectors()
+        else:
+            return jsonify({'error': 'Invalid edge detection method'}), 400
+        
+        # Convert numpy arrays to lists
+        for key in result:
+            if isinstance(result[key], np.ndarray):
+                result[key] = result[key].tolist()
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f"Edge detection error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Noise and Smoothing Module Routes
+@app.route('/api/add_noise/<filename>', methods=['POST'])
+def add_noise(filename):
+    """Add noise to image"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        noise_type = data.get('type', 'gaussian')
+        
+        noise_smoother = NoiseSmoothing(filepath)
+        
+        if noise_type == 'gaussian':
+            mean = data.get('mean', 0)
+            sigma = data.get('sigma', 25)
+            result = noise_smoother.add_gaussian_noise(mean, sigma)
+        elif noise_type == 'salt_pepper':
+            salt_prob = data.get('salt_prob', 0.01)
+            pepper_prob = data.get('pepper_prob', 0.01)
+            result = noise_smoother.add_salt_pepper_noise(salt_prob, pepper_prob)
+        elif noise_type == 'uniform':
+            low = data.get('low', -30)
+            high = data.get('high', 30)
+            result = noise_smoother.add_uniform_noise(low, high)
+        elif noise_type == 'speckle':
+            intensity = data.get('intensity', 0.1)
+            result = noise_smoother.add_speckle_noise(intensity)
+        else:
+            return jsonify({'error': 'Invalid noise type'}), 400
+        
+        # Save noisy image and return filename
+        if 'noisy_image' in result:
+            base_name = os.path.splitext(filename)[0]
+            ext = os.path.splitext(filename)[1]
+            output_filename = f"{base_name}_noisy_{noise_type}_{uuid.uuid4().hex[:8]}{ext}"
+            output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+            
+            # Convert RGB to BGR for saving
+            noisy_bgr = cv2.cvtColor(result['noisy_image'], cv2.COLOR_RGB2BGR)
+            cv2.imwrite(output_path, noisy_bgr)
+            
+            result['output_filename'] = output_filename
+            result.pop('noisy_image')  # Remove large array
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f"Add noise error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/apply_filter/<filename>', methods=['POST'])
+def apply_filter(filename):
+    """Apply smoothing or sharpening filters"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        filter_type = data.get('type', 'gaussian')
+        
+        noise_smoother = NoiseSmoothing(filepath)
+        
+        if filter_type == 'gaussian':
+            kernel_size = data.get('kernel_size', 5)
+            sigma_x = data.get('sigma_x', 0)
+            result = noise_smoother.apply_gaussian_blur(kernel_size, sigma_x)
+        elif filter_type == 'median':
+            kernel_size = data.get('kernel_size', 5)
+            result = noise_smoother.apply_median_filter(kernel_size)
+        elif filter_type == 'bilateral':
+            d = data.get('d', 9)
+            sigma_color = data.get('sigma_color', 75)
+            sigma_space = data.get('sigma_space', 75)
+            result = noise_smoother.apply_bilateral_filter(d, sigma_color, sigma_space)
+        elif filter_type == 'sharpen':
+            intensity = data.get('intensity', 1.0)
+            result = noise_smoother.apply_sharpen_filter(intensity)
+        elif filter_type == 'unsharp':
+            sigma = data.get('sigma', 1.0)
+            strength = data.get('strength', 1.5)
+            threshold = data.get('threshold', 0)
+            result = noise_smoother.apply_unsharp_mask(sigma, strength, threshold)
+        else:
+            return jsonify({'error': 'Invalid filter type'}), 400
+        
+        # Save filtered image and return filename
+        if 'filtered_image' in result:
+            base_name = os.path.splitext(filename)[0]
+            ext = os.path.splitext(filename)[1]
+            output_filename = f"{base_name}_filtered_{filter_type}_{uuid.uuid4().hex[:8]}{ext}"
+            output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+            
+            # Convert RGB to BGR for saving
+            filtered_bgr = cv2.cvtColor(result['filtered_image'], cv2.COLOR_RGB2BGR)
+            cv2.imwrite(output_path, filtered_bgr)
+            
+            result['output_filename'] = output_filename
+            result.pop('filtered_image')  # Remove large array
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f"Apply filter error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Histogram Enhancement Module Routes
+@app.route('/api/histogram_analysis/<filename>')
+def histogram_analysis(filename):
+    """Calculate and analyze image histogram"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        color_space = request.args.get('color_space', 'rgb')
+        
+        hist_enhancer = HistogramEnhancement(filepath)
+        analysis = hist_enhancer.calculate_histogram(color_space)
+        return jsonify(analysis)
+    
+    except Exception as e:
+        app.logger.error(f"Histogram analysis error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/histogram_equalization/<filename>', methods=['POST'])
+def histogram_equalization(filename):
+    """Apply histogram equalization"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        method = data.get('method', 'global')
+        
+        hist_enhancer = HistogramEnhancement(filepath)
+        
+        if method == 'clahe':
+            clip_limit = data.get('clip_limit', 2.0)
+            tile_size = data.get('tile_grid_size', [8, 8])
+            result = hist_enhancer.apply_clahe_advanced(clip_limit, tuple(tile_size))
+        else:
+            result = hist_enhancer.apply_histogram_equalization(method)
+        
+        # Save enhanced image
+        if 'enhanced_image' in result:
+            base_name = os.path.splitext(filename)[0]
+            ext = os.path.splitext(filename)[1]
+            output_filename = f"{base_name}_enhanced_{method}_{uuid.uuid4().hex[:8]}{ext}"
+            output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+            
+            # Convert RGB to BGR for saving
+            enhanced_bgr = cv2.cvtColor(result['enhanced_image'], cv2.COLOR_RGB2BGR)
+            cv2.imwrite(output_path, enhanced_bgr)
+            
+            result['output_filename'] = output_filename
+            result.pop('enhanced_image')  # Remove large array
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f"Histogram equalization error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Thresholding Module Routes
+@app.route('/api/thresholding/<filename>', methods=['POST'])
+def thresholding(filename):
+    """Apply various thresholding techniques"""
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(filepath):
+            return jsonify({'error': 'Image not found'}), 404
+        
+        data = request.get_json()
+        method = data.get('method', 'global')
+        
+        thresholder = Thresholding(filepath)
+        
+        if method == 'global':
+            threshold = data.get('threshold', 127)
+            max_value = data.get('max_value', 255)
+            thresh_type = data.get('threshold_type', 'binary')
+            result = thresholder.apply_global_threshold(threshold, max_value, thresh_type)
+        elif method == 'otsu':
+            result = thresholder.apply_otsu_threshold()
+        elif method == 'adaptive':
+            max_value = data.get('max_value', 255)
+            adaptive_method = data.get('adaptive_method', 'gaussian')
+            thresh_type = data.get('threshold_type', 'binary')
+            block_size = data.get('block_size', 11)
+            c_constant = data.get('c_constant', 2)
+            result = thresholder.apply_adaptive_threshold(max_value, adaptive_method, thresh_type, block_size, c_constant)
+        elif method == 'triangle':
+            result = thresholder.apply_triangle_threshold()
+        elif method == 'li':
+            result = thresholder.apply_li_threshold()
+        elif method == 'multi':
+            levels = data.get('levels', 3)
+            result = thresholder.apply_multi_threshold(levels)
+        elif method == 'compare':
+            result = thresholder.compare_thresholding_methods()
+        else:
+            return jsonify({'error': 'Invalid thresholding method'}), 400
+        
+        # Save thresholded image
+        if 'thresholded_image' in result:
+            base_name = os.path.splitext(filename)[0]
+            ext = os.path.splitext(filename)[1]
+            output_filename = f"{base_name}_threshold_{method}_{uuid.uuid4().hex[:8]}{ext}"
+            output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
+            
+            cv2.imwrite(output_path, result['thresholded_image'])
+            
+            result['output_filename'] = output_filename
+            result.pop('thresholded_image')  # Remove large array
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        app.logger.error(f"Thresholding error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
