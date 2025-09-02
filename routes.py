@@ -53,7 +53,7 @@ def upload_file():
 
         if file and allowed_file(file.filename):
             # Generate unique filename
-            filename = str(uuid.uuid4()) + '_' + secure_filename(file.filename)
+            filename = str(uuid.uuid4()) + '_' + secure_filename(file.filename or '')
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
@@ -234,8 +234,8 @@ def compare_images():
             return jsonify({'error': 'Invalid file types'}), 400
 
         # Save files
-        filename1 = str(uuid.uuid4()) + '_' + secure_filename(file1.filename)
-        filename2 = str(uuid.uuid4()) + '_' + secure_filename(file2.filename)
+        filename1 = str(uuid.uuid4()) + '_' + secure_filename(file1.filename or '')
+        filename2 = str(uuid.uuid4()) + '_' + secure_filename(file2.filename or '')
 
         filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
         filepath2 = os.path.join(app.config['UPLOAD_FOLDER'], filename2)
