@@ -50,6 +50,10 @@ def convert_numpy_to_serializable(obj):
         return [convert_numpy_to_serializable(item) for item in obj]
     elif isinstance(obj, (np.integer, np.floating)):
         return obj.item()
+    elif isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+    elif hasattr(obj, 'item'):  # numpy scalars
+        return obj.item()
     else:
         return obj
 
@@ -174,6 +178,9 @@ def statistics(filename):
 
         stats = ImageStatistics(filepath)
         statistics_data = stats.get_comprehensive_statistics()
+        
+        # Convert numpy arrays and other types to serializable format
+        statistics_data = convert_numpy_to_serializable(statistics_data)
 
         return jsonify(statistics_data)
 
@@ -193,6 +200,9 @@ def histogram(filename):
 
         stats = ImageStatistics(filepath)
         histogram_data = stats.get_histogram_data()
+        
+        # Convert numpy arrays and other types to serializable format
+        histogram_data = convert_numpy_to_serializable(histogram_data)
 
         return jsonify(histogram_data)
 
@@ -910,6 +920,10 @@ def histogram_analysis(filename):
         
         hist_enhancer = HistogramEnhancement(filepath)
         analysis = hist_enhancer.calculate_histogram(color_space)
+        
+        # Convert numpy arrays and other types to serializable format
+        analysis = convert_numpy_to_serializable(analysis)
+        
         return jsonify(analysis)
     
     except Exception as e:
