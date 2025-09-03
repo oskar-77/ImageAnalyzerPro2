@@ -41,19 +41,25 @@ def allowed_file(filename):
 
 
 def convert_numpy_to_serializable(obj):
-    """Recursively convert numpy arrays to lists for JSON serialization"""
+    """Recursively convert numpy arrays and all numpy types to JSON-serializable formats"""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, dict):
         return {key: convert_numpy_to_serializable(value) for key, value in obj.items()}
     elif isinstance(obj, (list, tuple)):
         return [convert_numpy_to_serializable(item) for item in obj]
-    elif isinstance(obj, (np.integer, np.floating)):
-        return obj.item()
+    elif isinstance(obj, np.integer) or type(obj).__name__ in ['int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64']:
+        return int(obj)
+    elif isinstance(obj, np.floating) or type(obj).__name__ in ['float16', 'float32', 'float64']:
+        return float(obj)
     elif isinstance(obj, (np.bool_, bool)):
         return bool(obj)
-    elif hasattr(obj, 'item'):  # numpy scalars
+    elif type(obj).__name__ in ['complex64', 'complex128']:
+        return {'real': float(obj.real), 'imag': float(obj.imag)}
+    elif hasattr(obj, 'item'):  # Any remaining numpy scalars
         return obj.item()
+    elif hasattr(obj, 'tolist'):  # Any remaining numpy arrays
+        return obj.tolist()
     else:
         return obj
 
@@ -159,6 +165,9 @@ def pixel_value(filename):
 
         explorer = ImageExploration(filepath)
         pixel_info = explorer.get_pixel_value(x, y)
+        
+        # Convert numpy arrays and other types to serializable format
+        pixel_info = convert_numpy_to_serializable(pixel_info)
 
         return jsonify(pixel_info)
 
@@ -295,6 +304,9 @@ def compare_images():
 
         comparison_data['image1'] = filename1
         comparison_data['image2'] = filename2
+        
+        # Convert numpy arrays and other types to serializable format
+        comparison_data = convert_numpy_to_serializable(comparison_data)
 
         return jsonify(comparison_data)
 
@@ -584,6 +596,10 @@ def digital_properties(filename):
         
         digital_images = DigitalImages(filepath)
         properties = digital_images.get_digital_properties()
+        
+        # Convert numpy arrays and other types to serializable format
+        properties = convert_numpy_to_serializable(properties)
+        
         return jsonify(properties)
     
     except Exception as e:
@@ -605,6 +621,10 @@ def pixel_matrix(filename):
         
         digital_images = DigitalImages(filepath)
         matrix = digital_images.get_pixel_matrix(x, y, size)
+        
+        # Convert numpy arrays and other types to serializable format
+        matrix = convert_numpy_to_serializable(matrix)
+        
         return jsonify(matrix)
     
     except Exception as e:
@@ -622,6 +642,10 @@ def bit_planes(filename):
         
         digital_images = DigitalImages(filepath)
         analysis = digital_images.analyze_bit_planes()
+        
+        # Convert numpy arrays and other types to serializable format
+        analysis = convert_numpy_to_serializable(analysis)
+        
         return jsonify(analysis)
     
     except Exception as e:
@@ -647,6 +671,9 @@ def color_spaces_conversion(filename):
                 if 'data' in space_data:
                     space_data.pop('data')  # Remove large numpy arrays
         
+        # Convert numpy arrays and other types to serializable format
+        conversions = convert_numpy_to_serializable(conversions)
+        
         return jsonify(conversions)
     
     except Exception as e:
@@ -667,6 +694,10 @@ def color_comparison(filename):
         
         color_spaces = ColorSpaces(filepath)
         comparison = color_spaces.compare_color_spaces(x, y)
+        
+        # Convert numpy arrays and other types to serializable format
+        comparison = convert_numpy_to_serializable(comparison)
+        
         return jsonify(comparison)
     
     except Exception as e:
@@ -686,6 +717,10 @@ def color_distribution(filename):
         
         color_spaces = ColorSpaces(filepath)
         distribution = color_spaces.analyze_color_distribution(color_space)
+        
+        # Convert numpy arrays and other types to serializable format
+        distribution = convert_numpy_to_serializable(distribution)
+        
         return jsonify(distribution)
     
     except Exception as e:
@@ -706,6 +741,10 @@ def color_palette(filename):
         
         color_spaces = ColorSpaces(filepath)
         palette = color_spaces.extract_color_palette(n_colors, color_space)
+        
+        # Convert numpy arrays and other types to serializable format
+        palette = convert_numpy_to_serializable(palette)
+        
         return jsonify(palette)
     
     except Exception as e:
@@ -964,6 +1003,9 @@ def histogram_equalization(filename):
             
             result['output_filename'] = output_filename
             result.pop('enhanced_image')  # Remove large array
+        
+        # Convert numpy arrays and other types to serializable format
+        result = convert_numpy_to_serializable(result)
         
         return jsonify(result)
     
