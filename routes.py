@@ -40,6 +40,20 @@ def allowed_file(filename):
         '.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def convert_numpy_to_serializable(obj):
+    """Recursively convert numpy arrays to lists for JSON serialization"""
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_to_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_numpy_to_serializable(item) for item in obj]
+    elif isinstance(obj, (np.integer, np.floating)):
+        return obj.item()
+    else:
+        return obj
+
+
 @app.route('/')
 def index():
     """Main dashboard page"""
@@ -717,8 +731,7 @@ def create_mask(filename):
             return jsonify({'error': 'Invalid mask type'}), 400
         
         # Convert numpy arrays to lists for JSON serialization
-        if 'mask' in result:
-            result['mask'] = result['mask'].tolist()
+        result = convert_numpy_to_serializable(result)
         
         return jsonify(result)
     
@@ -765,9 +778,7 @@ def edge_detection(filename):
             return jsonify({'error': 'Invalid edge detection method'}), 400
         
         # Convert numpy arrays to lists
-        for key in result:
-            if isinstance(result[key], np.ndarray):
-                result[key] = result[key].tolist()
+        result = convert_numpy_to_serializable(result)
         
         return jsonify(result)
     
@@ -998,6 +1009,9 @@ def thresholding(filename):
             
             result['output_filename'] = output_filename
             result.pop('thresholded_image')  # Remove large array
+        
+        # Convert any remaining numpy arrays to serializable format
+        result = convert_numpy_to_serializable(result)
         
         return jsonify(result)
     

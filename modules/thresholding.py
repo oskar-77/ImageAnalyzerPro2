@@ -195,7 +195,6 @@ class Thresholding:
             
             return {
                 'thresholded_image': thresholded,
-                'local_thresholds': local_threshold,
                 'parameters': {
                     'method': method,
                     'threshold_type': threshold_type,
@@ -211,7 +210,8 @@ class Thresholding:
                     'threshold_variation': float(threshold_variation),
                     'mean_local_threshold': float(mean_local_threshold),
                     'min_local_threshold': float(np.min(local_threshold)),
-                    'max_local_threshold': float(np.max(local_threshold))
+                    'max_local_threshold': float(np.max(local_threshold)),
+                    'local_threshold_stats_only': True
                 },
                 'description': f'Adaptive {method} thresholding with {block_size}x{block_size} blocks',
                 'success': True
@@ -266,7 +266,7 @@ class Thresholding:
             triangle_thresh = triangle_threshold(hist)
             
             # Apply threshold
-            _, thresholded = cv2.threshold(self.gray, triangle_thresh, 255, cv2.THRESH_BINARY)
+            _, thresholded = cv2.threshold(self.gray, float(triangle_thresh), 255, cv2.THRESH_BINARY)
             
             # Calculate statistics
             foreground_pixels = np.sum(thresholded == 255)
