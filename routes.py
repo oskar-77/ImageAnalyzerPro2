@@ -41,8 +41,21 @@ def allowed_file(filename):
 
 
 def convert_numpy_to_serializable(obj):
-    """Recursively convert numpy arrays and all numpy types to JSON-serializable formats"""
+    """Fast conversion of numpy arrays and all types to JSON-serializable formats"""
     if isinstance(obj, np.ndarray):
+        # For large arrays, sample or summarize to improve performance
+        if obj.size > 10000:  # Large array threshold
+            return {
+                'type': 'large_array',
+                'shape': obj.shape,
+                'dtype': str(obj.dtype),
+                'sample': obj.flat[:100].tolist(),  # First 100 elements
+                'stats': {
+                    'min': float(np.min(obj)),
+                    'max': float(np.max(obj)),
+                    'mean': float(np.mean(obj))
+                }
+            }
         return obj.tolist()
     elif isinstance(obj, dict):
         return {key: convert_numpy_to_serializable(value) for key, value in obj.items()}
@@ -51,15 +64,35 @@ def convert_numpy_to_serializable(obj):
     elif isinstance(obj, np.integer) or type(obj).__name__ in ['int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64']:
         return int(obj)
     elif isinstance(obj, np.floating) or type(obj).__name__ in ['float16', 'float32', 'float64']:
-        return float(obj)
+        val = float(obj)
+        # Handle special float values
+        if np.isnan(val):
+            return None
+        elif np.isinf(val):
+            return "Infinity" if val > 0 else "-Infinity"
+        return val
     elif isinstance(obj, (np.bool_, bool)):
         return bool(obj)
     elif type(obj).__name__ in ['complex64', 'complex128']:
-        return {'real': float(obj.real), 'imag': float(obj.imag)}
+        real_val = float(obj.real)
+        imag_val = float(obj.imag)
+        return {
+            'real': real_val if not np.isnan(real_val) else None,
+            'imag': imag_val if not np.isnan(imag_val) else None
+        }
     elif hasattr(obj, 'item'):  # Any remaining numpy scalars
-        return obj.item()
+        try:
+            val = obj.item()
+            if isinstance(val, float) and (np.isnan(val) or np.isinf(val)):
+                return None if np.isnan(val) else ("Infinity" if val > 0 else "-Infinity")
+            return val
+        except (ValueError, OverflowError):
+            return str(obj)
     elif hasattr(obj, 'tolist'):  # Any remaining numpy arrays
-        return obj.tolist()
+        try:
+            return obj.tolist()
+        except (ValueError, OverflowError):
+            return str(obj)
     else:
         return obj
 
@@ -249,7 +282,9 @@ def convert_image(filename):
             success = converter.to_hsv(output_path)
 
         if success:
-            return jsonify({'converted_filename': output_filename})
+            result = {'converted_filename': output_filename}
+            result = convert_numpy_to_serializable(result)
+            return jsonify(result)
         else:
             return jsonify({'error': 'Conversion failed'}), 500
 
@@ -882,6 +917,9 @@ def add_noise(filename):
             result['output_filename'] = output_filename
             result.pop('noisy_image')  # Remove large array
         
+        # Convert numpy arrays and other types to serializable format
+        result = convert_numpy_to_serializable(result)
+        
         return jsonify(result)
     
     except Exception as e:
@@ -938,6 +976,9 @@ def apply_filter(filename):
             
             result['output_filename'] = output_filename
             result.pop('filtered_image')  # Remove large array
+        
+        # Convert numpy arrays and other types to serializable format
+        result = convert_numpy_to_serializable(result)
         
         return jsonify(result)
     
