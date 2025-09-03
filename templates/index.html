@@ -1,18 +1,40 @@
 {% extends "base.html" %}
 
-{% block title %}Image Analysis Dashboard - Home{% endblock %}
+{% block title %}Mr.OSKAR - Advanced Image Processing Platform{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         <div class="text-center mb-5">
-            <h1 class="display-4">
-                <i class="fas fa-image text-primary me-3"></i>
-                Image Analysis Dashboard
-            </h1>
-            <p class="lead text-muted">
-                Comprehensive image analysis with pixel exploration, statistics, conversions, and comparisons
-            </p>
+            <div class="hero-section">
+                <h1 class="display-3 fw-bold mb-3">
+                    <i class="fas fa-microscope text-primary me-3 rotating-icon"></i>
+                    <span class="text-gradient-hero">Mr.OSKAR</span>
+                </h1>
+                <h2 class="h4 text-primary mb-3">Advanced Image Processing Platform</h2>
+                <p class="lead text-muted mb-4">
+                    Unleash the power of computer vision with our comprehensive suite of image analysis tools.
+                    From pixel-level exploration to advanced statistical analysis.
+                </p>
+                <div class="features-badges mb-4">
+                    <span class="badge bg-primary me-2 p-2">
+                        <i class="fas fa-eye me-1"></i>Computer Vision
+                    </span>
+                    <span class="badge bg-success me-2 p-2">
+                        <i class="fas fa-chart-line me-1"></i>Statistical Analysis
+                    </span>
+                    <span class="badge bg-info me-2 p-2">
+                        <i class="fas fa-palette me-1"></i>Image Processing
+                    </span>
+                    <span class="badge bg-warning me-2 p-2">
+                        <i class="fas fa-cogs me-1"></i>Real-time Processing
+                    </span>
+                </div>
+                <p class="text-muted">
+                    <i class="fas fa-user-tie text-primary me-2"></i>
+                    Developed by <strong class="text-primary">Eng. Abdulrazzaq Al-Surabi</strong>
+                </p>
+            </div>
         </div>
     </div>
 </div>
@@ -23,12 +45,18 @@
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">
-                    <i class="fas fa-microscope text-primary me-2"></i>
-                    Single Image Analysis
+                    <i class="fas fa-search-plus text-primary me-2"></i>
+                    Advanced Image Analysis
                 </h5>
                 <p class="card-text">
-                    Upload an image to explore pixel values, generate statistics, histograms, and apply various conversions.
+                    Upload any image to explore pixel values, generate comprehensive statistics, create interactive histograms, and apply sophisticated image processing techniques.
                 </p>
+                <ul class="list-unstyled small text-muted">
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Pixel-level exploration</li>
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Color space conversions</li>
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Statistical analysis</li>
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Interactive visualizations</li>
+                </ul>
                 
                 <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" class="mt-3">
                     <div class="mb-3">
@@ -51,12 +79,18 @@
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">
-                    <i class="fas fa-balance-scale text-success me-2"></i>
-                    Image Comparison
+                    <i class="fas fa-copy text-success me-2"></i>
+                    Intelligent Image Comparison
                 </h5>
                 <p class="card-text">
-                    Compare two images using SSIM, PSNR, and other metrics. Generate difference maps and detailed reports.
+                    Compare two images using advanced metrics including SSIM, PSNR, MSE, and structural similarity. Generate comprehensive difference maps and detailed analysis reports.
                 </p>
+                <ul class="list-unstyled small text-muted">
+                    <li><i class="fas fa-check-circle text-success me-1"></i> SSIM & PSNR metrics</li>
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Difference visualization</li>
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Quality assessment</li>
+                    <li><i class="fas fa-check-circle text-success me-1"></i> Detailed reports</li>
+                </ul>
                 
                 <form id="compareForm" class="mt-3">
                     <div class="mb-3">
@@ -79,15 +113,18 @@
 <!-- Features Overview -->
 <div class="row mt-5">
     <div class="col-12">
-        <h2 class="text-center mb-4">Features Overview</h2>
+        <h2 class="text-center mb-4 text-gradient-section">
+            <i class="fas fa-star text-warning me-2"></i>
+            Powerful Features at Your Fingertips
+        </h2>
     </div>
     
     <div class="col-md-3 mb-4">
         <div class="card text-center">
             <div class="card-body">
-                <i class="fas fa-mouse-pointer fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Pixel Exploration</h5>
-                <p class="card-text">Click on any pixel to view RGB, HSV, LAB values and brightness information.</p>
+                <i class="fas fa-crosshairs fa-3x text-primary mb-3 feature-icon"></i>
+                <h5 class="card-title">Precision Pixel Analysis</h5>
+                <p class="card-text">Interactive pixel exploration with RGB, HSV, LAB color spaces and comprehensive brightness analysis.</p>
             </div>
         </div>
     </div>
@@ -95,9 +132,9 @@
     <div class="col-md-3 mb-4">
         <div class="card text-center">
             <div class="card-body">
-                <i class="fas fa-chart-bar fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Statistics</h5>
-                <p class="card-text">Comprehensive statistics including brightness, histograms, and texture analysis.</p>
+                <i class="fas fa-chart-line fa-3x text-success mb-3 feature-icon"></i>
+                <h5 class="card-title">Advanced Statistics</h5>
+                <p class="card-text">In-depth statistical analysis including brightness distribution, multi-channel histograms, and texture characterization.</p>
             </div>
         </div>
     </div>
@@ -105,9 +142,9 @@
     <div class="col-md-3 mb-4">
         <div class="card text-center">
             <div class="card-body">
-                <i class="fas fa-exchange-alt fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Conversions</h5>
-                <p class="card-text">Convert between different formats: RGB, Grayscale, Binary, HSV, and more.</p>
+                <i class="fas fa-magic fa-3x text-warning mb-3 feature-icon"></i>
+                <h5 class="card-title">Smart Conversions</h5>
+                <p class="card-text">Seamless format conversions: RGB, Grayscale, Binary, HSV color spaces with optimized algorithms.</p>
             </div>
         </div>
     </div>
@@ -115,9 +152,9 @@
     <div class="col-md-3 mb-4">
         <div class="card text-center">
             <div class="card-body">
-                <i class="fas fa-download fa-3x text-info mb-3"></i>
-                <h5 class="card-title">Reports</h5>
-                <p class="card-text">Generate and download detailed analysis reports in TXT or PNG format.</p>
+                <i class="fas fa-file-export fa-3x text-info mb-3 feature-icon"></i>
+                <h5 class="card-title">Professional Reports</h5>
+                <p class="card-text">Generate comprehensive analysis reports with visualizations in multiple formats (TXT, PNG, PDF).</p>
             </div>
         </div>
     </div>
